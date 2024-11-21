@@ -1,0 +1,7 @@
+C:/Users/user/source/repos/STM32/myLib/myLib.c:16:5:__io_putchar	1
+C:/Users/user/source/repos/STM32/myLib/myLib.c:28:6:CLS	1
+C:/Users/user/source/repos/STM32/myLib/myLib.c:34:6:Cursor	1
+C:/Users/user/source/repos/STM32/myLib/myLib.c:43:6:Standby	2
+C:/Users/user/source/repos/STM32/myLib/myLib.c:49:5:i2c_init	1
+C:/Users/user/source/repos/STM32/myLib/myLib.c:55:6:ProgramStart	1
+C:/Users/user/source/repos/STM32/myLib/myLib.c:67:5:i2c_scan	5
