@@ -9,12 +9,13 @@
 
 extern UART_HandleTypeDef huart2; // extern
 
+
 int __io_putchar(int ch) // Single Character Output to PC
 {
 	HAL_UART_Transmit(&huart2, &ch, 1, 10);
 	// HAL_UART_Transmit(UART_HandleTypeDef *huart, const uint8_t *pData, uint16_t Size, uint32_t Timeout)
 	// *pData : Buffer for Transmitted Data
-	// uint16_t Size : Size of Transmitted Data >> 1
+	// uint16_t Size : Size of Transmitted Data >> 1 (STM32 : Little Endian > int 4-byte : [ch][\0][\0][\0]
 	// integer : 4-byte vs. char : 1-byte
 	// Timeout : Response Time < 10 ms
 	// Baud rate = 9600 = 1k bps >
@@ -38,7 +39,6 @@ void Cursor(int x, int y) // Move Cursor
 
 void Standby()
 {
-
 	while ( HAL_GPIO_ReadPin(B1_GPIO_Port, B1_Pin) );
 	// BTN B1 : OFF = 'H', ON = 'L'
 }
@@ -46,7 +46,7 @@ void Standby()
 void ProgramStart(char* str)
 {
 	CLS();
-	Cursor(0, 0); // Cursor Position Y=0, X=0
+	Cursor(0, 0); // Cursor Position X=0, Y=0
 
 	// Print-out Startup Instruction
 	printf("Program Name - %s \r\n", str);
@@ -54,8 +54,4 @@ void ProgramStart(char* str)
 
 	Standby();
 }
-
-
-
-
 

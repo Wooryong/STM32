@@ -40,7 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-I2C_HandleTypeDef hi2c1; // hi2c1 : real variable
+I2C_HandleTypeDef hi2c1;
 
 UART_HandleTypeDef huart2;
 
@@ -95,9 +95,16 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
+
   ProgramStart("I2C - LCD 1602");
-  i2c_init(&hi2c1);
-  i2c_scan();
+
+  i2c_init(&hi2c1); // which I2C controller will be used?
+  i2c_scan(); // Find Slave Address for I2C Communication
+  HAL_Delay(100);
+
+  LCD_init(); HAL_Delay(10);
+  LCD_Print("Hello");
+  LCD_PrintEx("Test", 1);
 
   /* USER CODE END 2 */
 
