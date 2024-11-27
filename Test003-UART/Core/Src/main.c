@@ -59,8 +59,6 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-// int __io_getchar(void)
-
 /* USER CODE END 0 */
 
 /**
@@ -96,22 +94,38 @@ int main(void)
 	// #include "myLib.c"
   ProgramStart("UART");
 
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  int count = 0;
+  // int count = 0;
+  int val;
   while (1)
   {
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+	  printf("Input Number : \r\n");
+	  /*
+	  printf("\033[A"); //[Escape Sequence] ^(ESC) = Octal 033 >> printf("\033"
+	  // ^[A : Cursor up 1 Line // ^[B : Cursor down 1 Line
+	  int len = strlen("Input Number : ");
+	  printf("\033[%dC", len);
+	  // ^[C : Cursor Right 1 Char // ^[(#Num)C : Cursor Right (#Num) Chars
+	  */
+	  setvbuf(stdin, NULL, _IONBF, 0); // Before Use of scanf Function, Buffer Clear
+	  // int setvbuf (FILE *__restrict, char *__restrict, int mode, size_t);
+	  scanf("%d", &val);
+	  printf("You Typed : %d \r\n", val);
+
+	  /*
 	  double a = count++ / 3.14;
 	  printf("UART Test ... %6.2f \r\n", a);
 	  HAL_Delay(1000);
 
 	  while ( (count == 20) );
-
+	  */
   }
   /* USER CODE END 3 */
 }
@@ -213,7 +227,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : B1_Pin */
   GPIO_InitStruct.Pin = B1_Pin;

@@ -6,9 +6,26 @@
  */
 
 #include "main.h"
+#include <stdio.h>
 
 extern UART_HandleTypeDef huart2; // extern
 
+int __io_getchar(void) // // Single Character Input to PC
+{
+	char ch; // Internal Buffer
+
+	while ( !(HAL_UART_Receive(&huart2, &ch, 1, 10) == HAL_OK) ); // != HAL_OK : Loop
+	// HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout)
+	// uint8_t *pData : Internal Buffer for Received Data
+	// uint16_t Size : Size of Received Data
+	// HAL_StatusTypeDef : HAL_OK(Normal), HAL_ERROR, HAL_BUSY, HAL_TIMEOUT
+
+	HAL_UART_Transmit(&huart2, &ch, 1, 10); // Echo at PuTTY
+	if (ch == '\r')HAL_UART_Transmit(&huart2, "\n", 1, 10); // Input Char == Enter >> Next Line
+	// "\n" : Due to Pointer Type (uint8_t *pData)
+
+	return ch;
+}
 
 int __io_putchar(int ch) // Single Character Output to PC
 {
@@ -53,5 +70,9 @@ void ProgramStart(char* str)
 	printf("Press Blue-Button (B1) to Start ... \r\n");
 
 	Standby();
+	setvbuf(stdin, NULL, _IONBF, 0); // Before Use of scanf Function, Buffer Clear
+	// int setvbuf (FILE *__restrict, char *__restrict, int mode, size_t);
+	// char *__restrict = NULL : Automatically, assigned Buffer in size
+	// int mode = _IONBF : No Buffer >> char *__restrict, size_t All ignored
 }
 

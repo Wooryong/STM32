@@ -8,11 +8,9 @@
  */
 
 #include "main.h"
-// #include "C:\Users\user\STM32Cube\Repository\STM32Cube_FW_F4_V1.28.1\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2c.h"
+#include "C:\Users\user\STM32Cube\Repository\STM32Cube_FW_F4_V1.28.1\Drivers\STM32F4xx_HAL_Driver\Inc\stm32f4xx_hal_i2c.h"
 // for later use of "I2C_HandleTypeDef"
 
-// extern I2C_HandleTypeDef hi2c1;
-// I2C_HandleTypeDef *hi2c;
 extern I2C_HandleTypeDef *hi2c;
 #define I2C_ADDR 0X4E		// Slave Address for I2C // (0X27 << 1)
 
@@ -48,7 +46,7 @@ void LCD_Command(char CMD) // CMD_Bit(8-bit) : ABCD_EFGH
 {
 	// Upper 4-bit (CMD) & Lower 4-bit (Control)
 	char n1, n2, n3, n4; // Nibble(4-bit)
-	char dd[4]; //
+	char Data[4]; //
 
 	n1 = CMD & 0XF0; // Upper Nibble > n1 = ABCD_0000
 	n2 = (CMD << 4) & 0XF0; // Lower Nibble > n2 = EFGH_0000
@@ -63,12 +61,12 @@ void LCD_Command(char CMD) // CMD_Bit(8-bit) : ABCD_EFGH
 	// RS '0' = Instruction (Command) & RS '1' = Data
 	// Control 4-bit {1 1 0 0} > {1 0 0 0} = Write Upper 4-bit Command
 	// Control 4-bit {1 1 0 1} > {1 0 0 1} = Write Upper 4-bit Data
-	dd[0] = n1 | n3; // n1 Enable >> 8'b ABCD_1100
-	dd[1] = n1 | n4; // n1 Disable >> 8'b ABCD_1000
-	dd[2] = n2 | n3; // n2 Enable >> 8'b EFGH_1100
-	dd[3] = n2 | n4; // n2 Disable >> 8'b EFGH_1000
+	Data[0] = n1 | n3; // n1 Enable >> 8'b ABCD_1100
+	Data[1] = n1 | n4; // n1 Disable >> 8'b ABCD_1000
+	Data[2] = n2 | n3; // n2 Enable >> 8'b EFGH_1100
+	Data[3] = n2 | n4; // n2 Disable >> 8'b EFGH_1000
 
-	HAL_I2C_Master_Transmit(hi2c, I2C_ADDR, dd, 4, 10);
+	HAL_I2C_Master_Transmit(hi2c, I2C_ADDR, Data, 4, 10);
 	// HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 
 }
@@ -77,7 +75,7 @@ void LCD_Data(char Data) // Data_Bit(8-bit) : ABCD_EFGH
 {
 	// Upper 4-bit (Data) & Lower 4-bit (Control)
 	char n1, n2, n3, n4; // Nibble(4-bit)
-	char dd[4]; //
+	char Data_arr[4]; //
 
 	n1 = Data & 0XF0; // Upper Nibble > n1 = ABCD_0000
 	n2 = (Data << 4) & 0XF0; // Lower Nibble > n2 = EFGH_0000
@@ -85,12 +83,12 @@ void LCD_Data(char Data) // Data_Bit(8-bit) : ABCD_EFGH
 	n3 = (1 << 3) | (1 << 2) | 0 | (1 << 0); // RW | EN = 1 | NC | RS = 1;
 	n4 = (1 << 3) | 0        | 0 | (1 << 0); // RW | EN = 0 | NC | RS = 1;
 
-	dd[0] = n1 | n3; // n1 Enable >> 8'b ABCD_1100
-	dd[1] = n1 | n4; // n1 Disable >> 8'b ABCD_1000
-	dd[2] = n2 | n3; // n2 Enable >> 8'b EFGH_1100
-	dd[3] = n2 | n4; // n2 Disable >> 8'b EFGH_1000
+	Data_arr[0] = n1 | n3; // n1 Enable >> 8'b ABCD_1101
+	Data_arr[1] = n1 | n4; // n1 Disable >> 8'b ABCD_1001
+	Data_arr[2] = n2 | n3; // n2 Enable >> 8'b EFGH_1101
+	Data_arr[3] = n2 | n4; // n2 Disable >> 8'b EFGH_1001
 
-	HAL_I2C_Master_Transmit(hi2c, I2C_ADDR, dd, 4, 10);
+	HAL_I2C_Master_Transmit(hi2c, I2C_ADDR, Data_arr, 4, 10);
 	// HAL_StatusTypeDef HAL_I2C_Master_Transmit(I2C_HandleTypeDef *hi2c, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t Timeout)
 }
 void LCD_init() // LCD Initialize Sequence
@@ -132,5 +130,25 @@ void LCD_PrintEx(char *str, int Line)
 	if (Line == 0)	LCD_Command(0X80); // Line 1
 	else				LCD_Command(0XC0); // Line 2
 	*/
+	LCD_Print(str);
+}
+
+int ln2 = 0; // Current Line no.
+char sBuf[20]; // Temp. Repos. for Older Data
+void LCD_PrintEx2(char *str)
+{
+	if (ln2 == 0)
+	{
+		LCD_Command(0X80); // Line 1
+		ln2++; // ln2 = 1
+	}
+	else if (ln2 == 1)
+	{
+		LCD_Command(0X80); LCD_Print(sBuf);
+		// First sBuf : NULL? > No Effect on 1st Line
+
+		LCD_Command(0XC0); // Line 2
+		strcpy(sBuf, str); // Save Older Data
+	}
 	LCD_Print(str);
 }
