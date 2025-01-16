@@ -13,6 +13,7 @@ extern UART_HandleTypeDef huart2; // extern
 int __io_getchar(void) // // Single Character Input to PC
 {
 	char ch; // Internal Buffer
+	// int ch >> char ch;
 
 	while ( !(HAL_UART_Receive(&huart2, &ch, 1, 10) == HAL_OK) ); // != HAL_OK : Loop
 	// HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout)

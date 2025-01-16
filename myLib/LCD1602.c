@@ -27,7 +27,7 @@ int i2c_init(I2C_HandleTypeDef *p)
 
 int i2c_scan() // Find Slave Address for I2C Communication
 {
-	// If I2C is used, this function does nothing.
+	// If I2C is not used, "i2c_scan()" function will do nothing.
 	if(hi2c == NULL) return;
 
 	printf("\n");
@@ -82,6 +82,7 @@ void LCD_Data(char Data) // Data_Bit(8-bit) : ABCD_EFGH
 
 	n3 = (1 << 3) | (1 << 2) | 0 | (1 << 0); // RW | EN = 1 | NC | RS = 1;
 	n4 = (1 << 3) | 0        | 0 | (1 << 0); // RW | EN = 0 | NC | RS = 1;
+	// RS '0' = Instruction (Command) & RS '1' = Data
 
 	Data_arr[0] = n1 | n3; // n1 Enable >> 8'b ABCD_1101
 	Data_arr[1] = n1 | n4; // n1 Disable >> 8'b ABCD_1001
@@ -102,7 +103,6 @@ void LCD_init() // LCD Initialize Sequence
 		HAL_Delay(10);
 	}
 	*/
-
 	LCD_Command(0X01); // Screen Clear
 	HAL_Delay(10); //
 	LCD_Command(0X02); // Cursor Position : Home
@@ -125,7 +125,7 @@ void LCD_Print(char *str) // Print Character String
 
 void LCD_PrintEx(char *str, int Line)
 {
-	Line ? LCD_Command(0XC0) : LCD_Command(0X80);
+	Line ? LCD_Command(0XC0): LCD_Command(0X80);
 	/*
 	if (Line == 0)	LCD_Command(0X80); // Line 1
 	else				LCD_Command(0XC0); // Line 2
