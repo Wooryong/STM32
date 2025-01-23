@@ -40,6 +40,42 @@ int __io_putchar(int ch) // Single Character Output to PC
 	return ch;
 }
 
+void ToUpper(char *str) // Change to Upper-case
+{
+	/*
+	int len = strlen(str);
+	for(int i = 0; i < len; i++)
+	{
+		if ( (*(str + i) >= 'a') && (*(str + i) <= 'z') )
+			*(str + i) = *(str + i) - ('a' - 'A');
+	}
+	*/
+	while (*str)
+	{
+		if( *str >= 'a' && *str <= 'z' ) *str &= 0XDF; // 32에 해당하는 bit 0으로
+		// if( *str >= 'a' && *str <= 'z' ) *str -= ('a' - 'A'); // *str -= 32;
+		str++;
+	}
+}
+
+void ToLower(char *str) // Change to Lower-case
+{
+	/*
+	int len = strlen(str);
+	for(int i = 0; i < len; i++)
+	{
+		if ( (*(str + i) >= 'A') && (*(str + i) <= 'Z') )
+			*(str + i) = *(str + i) + ('a' - 'A');
+	}
+	*/
+	while (*str)
+	{
+		if( *str >= 'A' && *str <= 'Z' ) *str |= 0x20; // 32에 해당하는 bit 1로
+		// if( *str >= 'A' && *str <= 'Z' ) *str += ('a' - 'A'); // *str += 32;
+		str++;
+	}
+}
+
 void CLS() // Screen Clear
 {
 	printf("\033[2J");

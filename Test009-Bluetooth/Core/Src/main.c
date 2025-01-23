@@ -21,7 +21,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -71,28 +71,111 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	if (huart == &huart1) // from Bluetooth Module
 	{
-			BUF1[Tail1++] = DUM1;
+			BUF1[Tail1++] = DUM1; // Store 1-byte Data to BUF1
 			HAL_UART_Transmit(&huart2, &DUM1, 1, 10); // Print the Bluetooth RX Data at Putty
-			// HAL_UART_Transmit(&huart2, DUM1, 1, 10);
-			HAL_UART_Receive_IT(&huart1, &DUM1, 1);
+			// HAL_UART_Transmit(&huart2, BUF1 + Tail1 - 1, 1, 10); // DUM1 is stored at BUF[Tail1 - 1]
+
+			if (DUM1 == '\r') // EOL - LF
+			{
+					CheckCMD(BUF1); Tail1 = 0;
+			}
+			HAL_UART_Receive_IT(&huart1, &DUM1, 1); // Due to one-time Interrupt > Recursive Expression
 	} // if (huart == &huart1)
 
-	else if (huart == &huart2) // from USB UART2 (Type on PC Putty)
+	else if (huart == &huart2) // from USB UART2 (Type Data on PC Putty)
 	{
-			BUF2[Tail2++] = DUM2;
-			HAL_UART_Transmit(&huart2, &DUM2, 1, 10); // Echo
+			BUF2[Tail2++] = DUM2; // Store 1-byte Data to BUF2
+			HAL_UART_Transmit(&huart2, &DUM2, 1, 10); // Echo (Show what you typed)
 			if (DUM2 == '\r') // Input Char == Enter (CR : 0X0D) >> Next Line
 			{
 				HAL_UART_Transmit(&huart2, "\n", 1, 10);
+				// HAL_UART_Transmit(&huart1, "\n", 1, 10); // "\n" : Due to Pointer Type (uint8_t *pData)
 
 				BUF2[Tail2++] = '\n'; // Append LF for EOL
-				HAL_UART_Transmit(&huart1, BUF2, Tail2, 10); // Press Enter > TX BUF2 Data (Length : Tail2) through UART1 (Bluetooth)
-				// HAL_UART_Transmit(&huart1, "\n", 1, 10); // "\n" : Due to Pointer Type (uint8_t *pData)
+				HAL_UART_Transmit(&huart1, BUF2, Tail2, 10);
+				// Press Enter > TX BUF2 Data (Length : Tail2) through UART1 (Bluetooth)
+				// UART1 RX Interrupt > Print BUF2 Data at Putty
+
 				Tail2 = 0; // BUF2 Pointer Reset
 			}
-			HAL_UART_Receive_IT(&huart2, &DUM2, 1);
+			HAL_UART_Receive_IT(&huart2, &DUM2, 1); // Due to one-time Interrupt > Recursive Expression
 	} // else if (huart == &huart2)
 } // void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+
+void TrimEx(char *Dest, char *Source) // ex) source = "___xxx__\t\r\n "
+{
+	int Head = 0;
+	int Tail = strlen(Source) - 1; // Exclude '\0' (Null)
+
+	while(1) // Head Index
+	{
+			if ( *(Source + Head) == ' ' || *(Source + Head) == '\t' || *(Source + Head) == '\r'  || *(Source + Head) == '\n' ) // Whitespace, Tap, CR, LF
+				Head++;
+			else
+				break;
+	}
+	while(1) // Tail Index
+	{
+			if ( *(Source + Tail) == ' ' || *(Source + Tail) == '\t' || *(Source + Tail) == '\r'  || *(Source + Tail) == '\n' ) // Whitespace, Tap, CR, LF
+				Tail--;
+			else
+				break;
+	}
+	strncpy(Dest, Source + Head, (Tail - Head + 1) ); // strncpy // Consider Zero-base Index
+}
+
+char * Trim(char *Source) // ex) source = "___xxx__\t\r\n "
+// Memory Dynamic Allocation Version
+{
+	int Head = 0;
+	int Tail = strlen(Source) - 1; // Exclude '\0' (Null)
+	/*
+	while(1) { // Head Index
+			if ( *(Source + Head) == ' ' || *(Source + Head) == '\t' || *(Source + Head) == '\r'  || *(Source + Head) == '\n' ) Head++; // Whitespace, Tap, CR, LF
+			else break;
+	}
+	while(1) { // Tail Index
+			if ( *(Source + Tail) == ' ' || *(Source + Tail) == '\t' || *(Source + Tail) == '\r'  || *(Source + Tail) == '\n' ) Tail--; // Whitespace, Tap, CR, LF
+			else break;
+	}
+	*/
+	while( *(Source + Head) == ' ' || *(Source + Head) == '\t' || *(Source + Head) == '\r'  || *(Source + Head) == '\n' ) Head++; // Head Index
+	while( *(Source + Tail) == ' ' || *(Source + Tail) == '\t' || *(Source + Tail) == '\r'  || *(Source + Tail) == '\n' ) Tail--;
+
+	char * Dest = (char *) malloc(Tail - Head + 1); // malloc(size)
+	// void	*malloc(size_t) __malloc_like __result_use_check __alloc_size(1) _NOTHROW;
+	strncpy(Dest, Source + Head, (Tail - Head + 1) ); // strncpy // Consider Zero-base Index
+	return Dest;
+}
+
+void CheckCMD(char *bb) // ex) str = "   LED 1   " ==>  str = "LED 1" << How to process whitespace??
+{
+	// char str[100];
+	// char arg[50];
+	// char * bb = Trim(str);
+	// TrimEx(str, bb); // Remove whitespace (bb > str) // void Trim(char *dest, char *source)
+	char * str = Trim(bb); // char * Trim(char *Source) ~ return dest;
+	ToUpper(str);
+	// ToLower(str);
+	if ( strncmp(str, "LED", 3) == 0 ) // strncmp function : First n-bit of String Compare
+	{
+		// TrimEx(arg, str + 3);
+		char *arg = Trim(str + 3);
+		// LED와 숫자 사이 공백 제거 - "LED" 이후부터 Trim
+			// if ( str[4] == '1')
+			if ( arg[0] == '1')
+			{
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 1);
+				// HAL_GPIO_WritePin(GPIOx, GPIO_Pin, PinState)
+			}
+			// else if ( str[4] == '0')
+			else if ( arg[0] == '0')
+			{
+				HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, 0);
+				// HAL_GPIO_WritePin(GPIOx, GPIO_Pin, PinState)
+			}
+	}
+}
 
 /* USER CODE END 0 */
 
@@ -134,8 +217,8 @@ int main(void)
   // HAL_StatusTypeDef HAL_UART_Receive_DMA(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
   // uint8_t *pData : Buffer
   // uint16_t Size : Buffer Size = MAX_BUF(100)
-  HAL_UART_Receive_IT(&huart1, &DUM1, 1);
-  HAL_UART_Receive_IT(&huart2, &DUM2, 1);
+  HAL_UART_Receive_IT(&huart1, &DUM1, 1); // 1-byte UART RX > Interrupt
+  HAL_UART_Receive_IT(&huart2, &DUM2, 1); // 1-byte UART RX > Interrupt
   // HAL_StatusTypeDef HAL_UART_Receive_IT(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size)
 
   /* USER CODE END 2 */
@@ -144,6 +227,15 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		/*
+	  	  char str[100];
+		printf( "Typed : ");
+		scanf( "%s", str);
+		printf( "You Typed : %s \r\n", str);
+		printf( "Change Lower-case to Upper-case \r\n");
+		ToUpper(str);
+		printf( "Changed Version : %s \r\n", str);
+		 */
 
     /* USER CODE END WHILE */
 
